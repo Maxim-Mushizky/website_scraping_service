@@ -27,9 +27,3 @@ def send_mail_to_all_recipients(email_recipients: list[str], body: str, subject:
         print(f"Sending message to {email_recipient}")
         em = compose_email_for_recipient(email_recipient, body=body, subject=subject)
         send_mail_to_single_recipient(context, email_message=em, email_recipient=email_recipient)
-
-
-if __name__ == '__main__':
-    recps = ['maximmu87@gmail.com', 'maximmu87@gmail.com']
-    subject = "Hello there mate!"
-    send_mail_to_all_recipients(recps, body="<h1>TEST</h1>", subject="TEST")

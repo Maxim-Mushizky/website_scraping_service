@@ -1,5 +1,12 @@
-def prep_mail_for_yad2_information(data: list[dict]) -> str:
+def msg_body_for_yad2_info(data: list[dict]) -> str:
     # TODO- Will need to replace raw strings to dedicated html and css
+    """
+    This is the body of the mail intended for yad2 scraping. It accepts a list of dictionaries that contain all
+    relevant data
+
+    :param data: List of dictionaries with relevant keys
+    :return: the body as a string object
+    """
 
     table_html = f"""
         <table style="width:100%; border-collapse: collapse;">
@@ -14,8 +21,14 @@ def prep_mail_for_yad2_information(data: list[dict]) -> str:
                 </tr>
             </thead>
             <tbody>
+            
                 {"".join([
-        f"<tr><td>{item['title']}</td><td>{item['description']}</td><td>{item['price_element']}</td><td>{item['rooms']}</td><td>{item['area']}</td><td>{item['merchant']}</td></tr>"
+        f"<tr><td>{item['title']}</td>"
+        f"<td>{item['description']}</td>"
+        f"<td>{item['price_element']}</td>"
+        f"<td>{item['rooms']}</td>"
+        f"<td>{item['area']}</td>"
+        f"<td>{item['merchant']}</td></tr>"
         for item in data
     ])}
             </tbody>
