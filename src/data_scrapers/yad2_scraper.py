@@ -9,17 +9,18 @@ from selenium.webdriver.common.action_chains import ActionChains
 from fake_useragent import UserAgent
 from datetime import datetime
 from time import sleep
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+
+from my_config_reader import MyConfig
+
+USER_AGENT = UserAgent()
+OPTIONS = webdriver.ChromeOptions()
+OPTIONS.add_argument(f'user-agent={USER_AGENT.random}')
 
 
-class Yad2SApartmentScraper:
+class Yad2SApartmentScrapingAgent:
 
-    def __init__(self, base_url: str = "https//yad2.co.il/",
+    def __init__(self, base_url: str = "https://www.yad2.co.il/",
                  option_clicker: str = "//img[starts-with(@alt, 'נדל')]"):
-        self._user_agent = UserAgent()
-        self._options = webdriver.ChromeOptions()
-        self._options.add_argument(f'user-agent={self._user_agent.random}')
         self.driver = webdriver.Chrome()
         self.driver.get(base_url)
         self.wait = WebDriverWait(self.driver, random.random() * random.randint(3, 12))
@@ -61,8 +62,8 @@ class Yad2SApartmentScraper:
                                        min_rooms: int,
                                        max_rooms: int) -> str:
 
-        url = f"https://www.yad2.co.il/realestate/forsale?topArea=25&area=53&city={city_code}&propertyGroup=apartments" \
-              f"&rooms={min_rooms}-{max_rooms}&price={min_price}-{max_price}"
+        return f"https://www.yad2.co.il/realestate/forsale?topArea=25&area=53&city={city_code}&propertyGroup=apartments" \
+               f"&rooms={min_rooms}-{max_rooms}&price={min_price}-{max_price}"
 
     def search_apartment_listings(self,
                                   city_code: int,
@@ -87,20 +88,12 @@ class Yad2SApartmentScraper:
 
             for listing in apartment_listings:
                 result_map = {}
-                title = listing.find('span', class_='title').text.strip()
-                price_element = listing.find('div', class_='price').text.strip()
-                description = listing.find('span', class_='subtitle').text.strip()
-                rooms = listing.find('div', class_='rooms-item').text.strip()
-                area = listing.find("div", class_="data SquareMeter-item").text.strip()
-                merchant = listing.find("div", class_="merchant").text.strip()
-
-                result_map['title'] = title
-                result_map['description'] = description
-                result_map['price_element'] = price_element
-                result_map['rooms'] = rooms
-                result_map['area'] = area
-                result_map['merchant'] = merchant
-
+                result_map['title'] = listing.find('span', class_='title').text.strip()
+                result_map['description'] = listing.find('span', class_='subtitle').text.strip()
+                result_map['price_element'] = listing.find('div', class_='price').text.strip()
+                result_map['rooms'] = listing.find('div', class_='rooms-item').text.strip()
+                result_map['area'] = listing.find("div", class_="data SquareMeter-item").text.strip()
+                result_map['merchant'] = listing.find("div", class_="merchant").text.strip()
                 results.append(result_map)
             # Scroll to the bottom of the page
             self.driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
@@ -109,3 +102,17 @@ class Yad2SApartmentScraper:
             time.sleep(random.random() * random.randint(1, 12))
             break
         return results
+
+
+if __name__ == '__main__':
+    city_code = 1139
+
+    min_price = 1000000  # Minimum price range
+    max_price = 1700000  # Maximum price range
+
+    min_rooms = 3
+    max_rooms = 5
+
+    agent = Yad2SApartmentScrapingAgent()
+    res = agent.search_apartment_listings(city_code, min_price, max_price, min_rooms, max_rooms)
+    print(res)
