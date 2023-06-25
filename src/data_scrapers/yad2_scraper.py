@@ -19,12 +19,12 @@ OPTIONS.add_argument(f'user-agent={USER_AGENT.random}')
 
 class Yad2SApartmentScrapingAgent:
 
-    def __init__(self, base_url: str = "https://www.yad2.co.il/",
+    def __init__(self, base_url: str = MyConfig.yad2_url,
                  option_clicker: str = "//img[starts-with(@alt, 'נדל')]"):
         self.driver = webdriver.Chrome()
         self.driver.get(base_url)
         self.wait = WebDriverWait(self.driver, random.random() * random.randint(3, 12))
-        sleep(random.random() * random.randint(3, 12))
+        sleep(random.uniform(3.0, 12.0))
         self.driver.find_element(By.XPATH, option_clicker).click()
         self.add_random_mouse_movement()
 
@@ -65,41 +65,34 @@ class Yad2SApartmentScrapingAgent:
         return f"https://www.yad2.co.il/realestate/forsale?topArea=25&area=53&city={city_code}&propertyGroup=apartments" \
                f"&rooms={min_rooms}-{max_rooms}&price={min_price}-{max_price}"
 
+    def _fetch_listing_objects(self, listing) -> dict:
+        result_map = {}
+        result_map['title'] = listing.find('span', class_='title').text.strip()
+        result_map['description'] = listing.find('span', class_='subtitle').text.strip()
+        result_map['price_element'] = listing.find('div', class_='price').text.strip()
+        result_map['rooms'] = listing.find('div', class_='rooms-item').text.strip()
+        result_map['area'] = listing.find("div", class_="data SquareMeter-item").text.strip()
+        result_map['merchant'] = listing.find("div", class_="merchant").text.strip()
+        return result_map
+
     def search_apartment_listings(self,
                                   city_code: int,
                                   min_price: int,
                                   max_price: int,
                                   min_rooms: int,
                                   max_rooms: int) -> list[dict]:
-        results = []
         self.driver.get(self._compose_apartment_listing_url(city_code, min_price, max_price, min_rooms, max_rooms))
         while True:
             # Wait for the dynamic content to load
             self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'feeditem')))
-
-            # Extract the page HTML source
             html = self.driver.page_source
-
-            # Parse the HTML with BeautifulSoup
             soup = BeautifulSoup(html, 'html.parser')
-
-            # Find the apartment listings on the page
             apartment_listings = soup.find_all('div', class_='feeditem')
-
-            for listing in apartment_listings:
-                result_map = {}
-                result_map['title'] = listing.find('span', class_='title').text.strip()
-                result_map['description'] = listing.find('span', class_='subtitle').text.strip()
-                result_map['price_element'] = listing.find('div', class_='price').text.strip()
-                result_map['rooms'] = listing.find('div', class_='rooms-item').text.strip()
-                result_map['area'] = listing.find("div", class_="data SquareMeter-item").text.strip()
-                result_map['merchant'] = listing.find("div", class_="merchant").text.strip()
-                results.append(result_map)
-            # Scroll to the bottom of the page
+            results = [self._fetch_listing_objects(listing) for listing in apartment_listings]
             self.driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
 
             # Wait for a short interval before scrolling again
-            time.sleep(random.random() * random.randint(1, 12))
+            time.sleep(random.uniform(1.0, 12.0))
             break
         return results
 

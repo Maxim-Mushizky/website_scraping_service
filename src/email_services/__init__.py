@@ -2,7 +2,6 @@ from email.message import EmailMessage
 import ssl
 import smtplib
 import os
-
 from dotenv import load_dotenv
 
 load_dotenv()
